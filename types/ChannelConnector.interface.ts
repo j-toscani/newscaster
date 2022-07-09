@@ -1,9 +1,13 @@
 export default interface ChannelConnector<R, T> {
-    lastId: string | number | null;
-    data: T | null;
+  _data: T | null;
+  onUpdate?: (value: T) => void;
 
-    fetchData: () => Promise<R>;
-    findMostRecent: (data: R) => T;
-    getId: (data: T) => number | string;
-    poll: () => void;
+  get data(): T;
+  set data(value: T);
+
+  isNewEntry(value: T): boolean;
+  fetchData: () => Promise<R>;
+  findMostRecentEntry: (data: R) => T;
+  getId: (data: T) => number | string | undefined;
+  poll: () => void;
 }

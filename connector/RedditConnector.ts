@@ -1,15 +1,17 @@
 import ChannelConnector from "../types/ChannelConnector.interface.ts";
 import RedditPost from "../types/RedditPost.interface.ts";
 import RedditResponse from "../types/RedditResponse.interface.ts";
+import logUpdate from "../lib/logUpdate.ts";
 
 export default class RedditConnector
   implements ChannelConnector<RedditResponse, RedditPost>
 {
-  lastId: number | string | null;
-  data: RedditPost | null;
-  constructor() {
-    this.lastId = null;
-    this.data = null;
+  _data: RedditPost | null;
+  handleUpdate: (value: RedditPost) => void;
+
+  constructor(onUpdate?: (value: RedditPost) => void) {
+    this._data = null;
+    this.handleUpdate = onUpdate ?? logUpdate;
   }
 
   async fetchData() {
@@ -19,24 +21,39 @@ export default class RedditConnector
     return await response.json();
   }
 
-  findMostRecent(response: RedditResponse) {
+  findMostRecentEntry(response: RedditResponse) {
     return response.data.children[0].data;
   }
 
-  getId(data: RedditPost) {
-    return data.name;
+  getId(data: RedditPost | null) {
+    return data?.name ?? '';
+  }
+
+  get lastId() {
+    return this.data ? this.getId(this.data) : null;
+  }
+
+  get data(): RedditPost {
+    return this.data;
+  }
+
+  set data(value: RedditPost) {
+    if(!this.isNewEntry(value)) {
+      return;
+    }
+
+    this._data = value;
+    this.handleUpdate(value);
+  }
+
+  isNewEntry(value: RedditPost) {
+    return this.getId(this._data) !== this.getId(value)
   }
 
   async poll() {
-    const data = await this.fetchData();
-    const mostRecent = this.findMostRecent(data);
-    const mostRecentId = this.getId(mostRecent);
-
-    if (mostRecentId !== this.lastId) {
-      console.log(mostRecentId, mostRecent);
-      this.lastId = mostRecentId;
-    } else {
-      console.log("no news");
-    }
+    const response = await this.fetchData();
+    const mostRecentEntry = this.findMostRecentEntry(response);
+    
+    this.data = mostRecentEntry;
   }
 }
