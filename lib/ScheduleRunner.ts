@@ -1,6 +1,6 @@
 import PollSchedule from "../lib/PollSchedule.ts";
 
-class ScheduleRunner {
+export default class ScheduleRunner {
     _stop: boolean;
     lastUpdate: number;
     schedules: PollSchedule[]
@@ -20,13 +20,13 @@ class ScheduleRunner {
             this.lastUpdate = Date.now();
             this.schedules.forEach(schedule => {
                 const shouldPoll = schedule.check(this.lastUpdate);
-
+                
                 if(shouldPoll) {
                     schedule.connector.poll();
                 }
             })
 
-            if(!this.stop) {
+            if(!this._stop) {
                 this._schedule();
             }
         }, this.nextUpdateIn)
