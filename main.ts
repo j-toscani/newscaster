@@ -1,6 +1,9 @@
-import RedditConnector from "./connector/RedditConnector.ts";
-const connector = new RedditConnector();
+import RedditConnector from "./connectors/RedditConnector.ts";
+import PollSchedule from "./lib/PollSchedule.ts";
+import ScheduleRunner from "./lib/ScheduleRunner.ts";
 
-setInterval(() => {
-    connector.poll();
-}, 20000);
+const connector = new RedditConnector();
+const schedule = new PollSchedule({connector});
+const runner = new ScheduleRunner([schedule]);
+
+runner.run();
