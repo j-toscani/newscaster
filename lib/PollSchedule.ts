@@ -12,7 +12,11 @@ export default class PollScheduler<R = any, T = any> {
     this.nextUpdate = Date.now();
   }
 
-  check(currentTick: number) {
+  shouldUpdate(currentTick: number) {
     return this.nextUpdate < currentTick;
+  }
+
+  setNextUpdate(currentTick: number) {
+    this.nextUpdate = currentTick + this.interval;
   }
 }

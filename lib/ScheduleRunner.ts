@@ -1,42 +1,40 @@
 import PollSchedule from "../lib/PollSchedule.ts";
 
 export default class ScheduleRunner {
-    _stop: boolean;
-    lastUpdate: number;
-    schedules: PollSchedule[]
+  lastUpdate: number;
+  schedules: PollSchedule[];
 
-    constructor(schedules: PollSchedule[]) {
-        this.lastUpdate = Date.now();
-        this.schedules = schedules;
-        this._stop = false;
-    }
+  constructor(schedules: PollSchedule[]) {
+    this.lastUpdate = Date.now();
+    this.schedules = schedules;
+  }
 
-    get nextUpdateIn() {
-        return this.lastUpdate + 1000 - Date.now();
-    }
+  get nextUpdateIn() {
+    return this.lastUpdate + 1000 - Date.now();
+  }
 
-    private _schedule() {
-        setTimeout(() => {
-            this.lastUpdate = Date.now();
-            this.schedules.forEach(schedule => {
-                const shouldPoll = schedule.check(this.lastUpdate);
-                
-                if(shouldPoll) {
-                    schedule.connector.poll();
-                }
-            })
+  private _runSchedule(schedule: PollSchedule) {
+    schedule.connector.poll();
+    schedule.setNextUpdate(this.lastUpdate);
+  }
 
-            if(!this._stop) {
-                this._schedule();
-            }
-        }, this.nextUpdateIn)
-    }
+  private _runSchedules() {
+    setTimeout(() => {
+      this.lastUpdate = Date.now();
+      this.schedules.forEach((schedule) => {
+        
+        if (!schedule.shouldUpdate(this.lastUpdate)) {
+          return;
+        }
 
-    run() {
-        this._schedule();
-    }
+        this._runSchedule(schedule);
+      });
 
-    stop() {
-        this._stop = true;
-    }
+      this._runSchedules();
+    }, this.nextUpdateIn);
+  }
+
+  run() {
+    this._runSchedules();
+  }
 }
