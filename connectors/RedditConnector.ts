@@ -7,16 +7,18 @@ export default class RedditConnector
   implements ChannelConnector<RedditResponse, RedditPost>
 {
   _data: RedditPost | null;
+  subReddit: string;
   handleUpdate: (value: RedditPost) => void;
 
-  constructor(onUpdate?: (value: RedditPost) => void) {
+  constructor(subReddit: string, onUpdate?: (value: RedditPost) => void) {
     this._data = null;
+    this.subReddit = subReddit;
     this.handleUpdate = onUpdate ?? logUpdate;
   }
 
   async fetchData() {
     const response = await fetch(
-      "https://www.reddit.com/r/Stormgate/new.json?limit=1"
+      `https://www.reddit.com/r${this.subReddit}/new.json?limit=1`
     );
     return await response.json();
   }
